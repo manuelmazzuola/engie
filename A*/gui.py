@@ -25,33 +25,33 @@ class Interface(goocanvas.Canvas):
 		self._circles = []
 		self._lines = []
 		self.show()
-	
+		print "Click to add new points, then click the middle button"
+
 	def expose(self, widget, event):
 		pass
-		
+
 	def motion_notify(self, widget, event):
 		try:
 			self._item.props.center_x = event.x
 			self._item.props.center_y = event.y
 		except AttributeError:
 			pass
-		
+
 	def button_press(self, widget, event):
 		#inserimento nodi
 		if self._state == 0:
-			if event.button != 3:
+			if event.button == 1:
 				self.create_node(event.x, event.y)
-			#tasto destro
-			elif event.button == 3:
-				self._item.remove()
-				del self._item
+			elif event.button == 2:
 				self._state = 1
+				print "Click on nodes to link them together, then click the right button"
 		#collegamento nodi
 		elif self._state == 1:
 			if event.button == 3:
 				self._state = 2
 				self._first = None
-	
+				print "Click on the starting node"
+
 	def circle_press(self, widget, target, event):
 		if self._state == 1:
 			if self._first is None:
@@ -59,20 +59,21 @@ class Interface(goocanvas.Canvas):
 			else:
 				self._second = widget
 				if self._second != self._first:
-					line = goocanvas.Path(parent=self.get_root_item(), 
-											data="M "+str(self._first.props.center_x)+" "+str(self._first.props.center_y)+ 
-											" L "+str(self._second.props.center_x)+" "+str(self._second.props.center_y), 
+					line = goocanvas.Path(parent=self.get_root_item(),
+											data="M "+str(self._first.props.center_x)+" "+str(self._first.props.center_y)+
+											" L "+str(self._second.props.center_x)+" "+str(self._second.props.center_y),
 											line_width= 0.95)
 					line.set_data("id", str(self._first.get_data("id"))+"-"+str(self._second.get_data("id")))
 					self._lines.append(line)
 					tmp = (self._first.get_data("id"), self._second.get_data("id"))
-					self._plant[tmp] = (math.sqrt(math.pow((self._first.props.center_x - self._second.props.center_x), 2) 
+					self._plant[tmp] = (math.sqrt(math.pow((self._first.props.center_x - self._second.props.center_x), 2)
 									+ math.pow((self._first.props.center_y - self._second.props.center_y), 2)))
 					self._first = None
 				else: self._first = None
 		elif self._state == 2:
 			if self._first is None:
 				self._first = widget.get_data("id")
+				print "Click on the arrival node"
 				print self._first
 			else:
 				self._second = widget.get_data("id")
@@ -82,7 +83,7 @@ class Interface(goocanvas.Canvas):
 				else:
 					self.find()
 					self._state = 3
-			
+
 	def create_node(self, x, y):
 		circle = goocanvas.Ellipse(parent=self.get_root_item(), center_x=x, center_y=y,
 								 radius_x=5, radius_y=5, stroke_color="black", fill_color="black",
@@ -94,6 +95,7 @@ class Interface(goocanvas.Canvas):
 	def find(self):
 		call = Call(self._plant, self._first, self._second)
 		results = call()
+		print results
 		if len(results) > 0:
 			for i in self._circles:
 				data_i = i.get_data("id")
@@ -119,10 +121,9 @@ def main():
 	window.set_title("A* pathfinder")
 	window.resize(500, 300);
 	window.connect("destroy", gtk.main_quit)
-	window.show()	
+	window.show()
 	window.add(interface)
 	gtk.main()
-	
+
 if __name__ == "__main__":
 	main()
-	
